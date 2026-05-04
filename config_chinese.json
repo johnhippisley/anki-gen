@@ -1,0 +1,36 @@
+{
+  "config": {
+    "anki_seed_field": "Hanzi",
+    "anki_seed_field_extra": ["Key"]
+  },
+
+  "data/cedict.db": {
+    "name": "cedict",
+    "condition": "simplified='{{seed}}'",
+    "pinyin_fields": [
+      "pinyin"
+    ],
+    "fields": {
+      "simplified": ["Key", "Hanzi"],
+      "pinyin": "Pinyin",
+      "english": "English"
+    }
+  },
+
+  "data/chin_example_sen.db": {
+    "name": "examples",
+	"condition": 
+		"simplified LIKE '%{{seed}}%' ORDER BY CASE WHEN length(simplified) BETWEEN 10 AND 15 THEN 0 WHEN length(simplified) < 10 THEN 1 ELSE 2 END, CASE WHEN length(simplified) < 10 THEN -length(simplified) ELSE length(simplified) END",
+	"bwrap_fields": [
+      "simplified"
+    ],
+    "pinyin_fields": [
+      "pinyin"
+    ],
+    "fields": {
+      "simplified": "Usage",
+      "pinyin": "SentencePinyin.1",
+      "english": "SentenceMeaning"
+    }
+  }
+}
