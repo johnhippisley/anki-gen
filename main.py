@@ -18,11 +18,11 @@ def parse_args():
 	parser.add_argument("-r", "--preview", action="store_true", help="Preview mode.")
 	parser.add_argument("-d", "--deck-name", help="Name of the Anki deck")
 	parser.add_argument("-t", "--tag", default=None, help="Tag name to apply to imported cards")
-	parser.add_argument("-c", "--config", default="config.json", help='Database configuration JSON. Default: "config.json"')
+	parser.add_argument("-c", "--config", default="config_chinese.json", help='Database configuration JSON. Default: "config_chinese.json"')
 	parser.add_argument(
 		"-v", "--verbose", nargs="?", const=1, default=0, type=int, choices=[0, 1, 2],
 		help="Verbosity level: 0 by default, 1 with --verbose, 2 with --verbose=2"
-	)	
+	)
 	return parser.parse_args()
 
 # Global configuration
