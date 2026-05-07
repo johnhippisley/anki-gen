@@ -15,12 +15,12 @@ python3 main.py [-h] -p PATH -m CARD_TYPE [-r] [-d DECK_NAME] [-t TAG] [-c CONFI
 | Option | Description |
 |---|---|
 | `-h`, `--help` | Show help message and exit |
-| `-p PATH`, `--path PATH` | Path to the 'seed' file (.csv or .txt) |
-| `-m CARD_TYPE`, `--model CARD_TYPE` | Anki card/model type to use |
-| `-r`, `--preview` | Preview mode (doesn't add cards) |
-| `-d DECK_NAME`, `--deck DECK_NAME` | Target Anki deck name |
-| `-t TAG(S)`, `--tag TAG(S)` | Tag(s) to apply to imported cards |
 | `-c CONFIG`, `--config CONFIG` | Path to .json configuration file |
+| `-p PATH`, `--path PATH` | Path to .txt/.csv containing 'seeds' for card generation |
+| `-r`, `--preview` | Preview mode. Cards are not added to Anki |
+| `-m CARD_TYPE`, `--model CARD_TYPE` | Name of the Anki card type for card creation |
+| `-d DECK_NAME`, `--deck DECK_NAME` | Name of the Anki deck that cards should be added to |
+| `-t TAG(S)`, `--tag TAG(S)` | Tag(s) to apply to imported cards |
 | `-v [{0,1,2}]`, `--verbose [{0,1,2}]` | Verbosity level |
 
 ## Example Usage:
@@ -39,35 +39,38 @@ python3 main.py -d New -p my_vocabulary_list.txt -m 词汇 -t example-tag -v
 ```
 ## Dependencies
 
-Requires Python 3 and the following dependencies:
+Requires Python 3 or later and the following dependencies:
 - `pypinyin`
 - `sqlite3`
 - `wcwidth`
+- `pypinyin` (If `lang` is set to `zh`)
+- `jieba` (If `lang` is set to `zh`)
 
-You'll also need to have the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plug-in installed.
-
-Anki must be open while the script is running.
+You'll also need to have the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plug-in installed. Anki must be open while the script is running.
 
 ## JSON Config Format
 
-The config file defines how input columns map onto Anki note fields and how cards should be created.
+The config file defines how the database columns map onto Anki note fields, as well as some other configuration options. 
 
-Example `config.json`:
+Example `example_config.jsonc`:
 
-```json
+```jsonc
 {
-  "config": {
-    "anki_seed_field": "Hanzi"
+  "__config__": {
+    "anki_seed_field": "Hanzi",                         // Anki field associated with the "seed"
+    "anki_seed_field_copyto": "Key",                    // Other anki field(s) you wish to copy the seed to		
+    "check_seed_distinct_word": "Usage",                // Use NLP to check that the seed is present in these fields as a distinct word
+    "edge_tts_generate": {"Hanzi": "Audio"},			// Dictionary for TTS generation. FROM_FIELD -> TO_FIELD
+    "seed_bwrap_fields": "Usage",						// Fields where we should wrap the seed in <b> ... </b>
+    "pinyin_fields": ["Pinyin", "SentencePinyin.1"]     // Fields where Pinyin is present (automatically formats and converts to tone marks)
   },
 
-  "data/cedict.db": {
-    "name": "cedict",
-    "condition": "simplified='{{seed}}'",
-    "pinyin_fields": [
-      "pinyin"
-    ],
-    "fields": {
-      "simplified": ["Key", "Hanzi"],
+  "data/cedict.db": {                                   // Database file to configure
+    "name": "cedict",									// Internal name of the database
+    "lang": "zh",										// Language
+    "condition": "simplified='{{seed}}'",               // Condition after SQL WHERE for selecting data
+    "fields": {                                         // Mapping from database to Anki field(s)
+      "simplified": ["Key", "Hanzi"],					// Here the column "simplified" gets mapped to the fields "Key" & "Hanzi"
       "pinyin": "Pinyin",
       "english": "English"
     }
@@ -75,21 +78,20 @@ Example `config.json`:
 
   "data/chin_example_sen.db": {
     "name": "examples",
+    "lang": "zh",
 	"condition": "simplified LIKE '%{{seed}}%'",
     "fields": {
       "simplified": "Usage",
       "pinyin": "SentencePinyin.1",
       "english": "SentenceMeaning"
-    }
+      }
   }
 }
 ```
 
-Here the database column `simplified` will be copied into the Anki fields `Key` and `Hanzi`, etc.
-
 ## Input File Format
 
-When using with a CSV file, it should be in the following format:
+Cards can also be generated with individual tags. You can import a CSV file with the following format:
 
 Example:
 
