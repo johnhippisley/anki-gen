@@ -3,7 +3,7 @@ import csv
 import json
 import urllib.request
 from dataclasses import dataclass, field
-import utils.display as display
+from utils.display import *
 
 CONNECT_URL = "http://127.0.0.1:8765"
 LOG_FILE = "connect.log"
@@ -76,21 +76,21 @@ class AnkiCard:
 		if self.is_empty():
 			return "None"
 
-		width = display.terminal_box_width(max_width=90, min_width=50)
+		width = terminal_box_width(max_width=90, min_width=50)
 		inner = width - 4
-		title = f"Card '{self.fields[0][1]}' ({display.BOLD}{self.model_name}{display.RESET})"
+		title = f"Card '{self.fields[0][1]}' ({CC.BOLD}{self.model_name}{CC.RESET})"
 		lines: list[str] = []
 		lines.append("┌" + "─" * (width - 2) + "┐")
-		lines.append(display.box_row(title, inner))
+		lines.append(box_row(title, inner))
 		lines.append("├" + "─" * (width - 2) + "┤")
 
 		for name, value in self.fields:
-			lines.extend(display.format_field_rows(name, value, inner))
+			lines.extend(format_field_rows(name, value, inner))
 
 		if self.tags:
 			lines.append("├" + "─" * (width - 2) + "┤")
 			tags_content = "(None)" if not any(self.tags) else ", ".join(self.tags)
-			lines.append(display.box_row(f"{display.BOLD}Tags:{display.RESET} {tags_content}", inner))
+			lines.append(box_row(f"{CC.BOLD}Tags:{CC.RESET} {tags_content}", inner))
 
 		lines.append("└" + "─" * (width - 2) + "┘")
 

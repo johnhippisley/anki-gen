@@ -1,10 +1,22 @@
 import re
 import shutil
 from wcwidth import wcswidth
+from enum import StrEnum
 
-BOLD = "\033[1m"
-GREEN = "\033[32m"
-RESET = "\033[0m"
+class CC(StrEnum):
+	BOLD = "\033[1m"
+	ITALIC = "\033[3m"
+	RESET = "\033[0m"
+	GREEN = "\033[32m"
+	RED = "\033[31m"
+	BG_RED = "\033[41m"
+	BG_GREEN = "\033[42m"
+	BG_YELLOW = "\033[43m"
+	BG_BLUE = "\033[44m"
+	BG_MAGENTA = "\033[45m"
+	BG_CYAN = "\033[46m"
+	BG_WHITE = "\033[47m"
+	BG_GRAY = "\033[100m"
 
 def strip_ansi(s: str) -> str:
 	return re.sub(r"\033\[[0-9;]*m", "", s)
@@ -13,8 +25,8 @@ def display_len(s: str) -> int:
 	return max(0, wcswidth(strip_ansi(s)))
 
 def html_bold_to_ansi(s: str) -> str:
-	s = re.sub(r"<b>(.*?)</b>", rf"{BOLD}\1{RESET}", s)
-	s = re.sub(r"<strong>(.*?)</strong>", rf"{BOLD}\1{RESET}", s)
+	s = re.sub(r"<b>(.*?)</b>", rf"{CC.BOLD}\1{CC.RESET}", s)
+	s = re.sub(r"<strong>(.*?)</strong>", rf"{CC.BOLD}\1{CC.RESET}", s)
 	return s
 
 def is_cjk(ch: str) -> bool:
@@ -83,7 +95,7 @@ def box_row(text: str, inner_width: int) -> str:
 
 def format_field_rows(name: str, value: str, inner_width: int) -> list[str]:
 	value = html_bold_to_ansi(str(value).replace("\n", "\\n"))
-	prefix = f"{GREEN}{BOLD}{name}:{RESET} "
+	prefix = f"{CC.GREEN}{CC.BOLD}{name}:{CC.RESET} "
 	continuation_prefix = " " * display_len(prefix)
 	first_width = inner_width - display_len(prefix)
 	wrapped = wrap_text(value, first_width)

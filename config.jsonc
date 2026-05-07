@@ -1,0 +1,32 @@
+{
+  "__config__": {
+    "anki_seed_field": "Hanzi",                         // Anki field associated with the "seed"
+    "anki_seed_field_copyto": "Key",                    // Other anki field(s) you wish to copy the seed to		
+    "check_seed_distinct_word": "Usage",                // Use NLP to check that the seed is present in these fields as a distinct word
+    "edge_tts_generate": {"Hanzi": "Audio"},			      // Dictionary for TTS generation. FROM_FIELD -> TO_FIELD
+    "seed_bwrap_fields": "Usage",						            // Fields where we should wrap the seed in <b> ... </b>
+    "pinyin_fields": ["Pinyin", "SentencePinyin.1"]     // Fields where Pinyin is present (automatically formats and converts to tone marks)
+  },
+
+  "data/cedict.db": {                                   // Database file to configure
+    "name": "cedict",
+    "lang": "zh",
+    "condition": "simplified='{{seed}}'",               // Condition after SQL WHERE for selecting data
+    "fields": {                                         // Mapping from database to Anki field(s)
+      "simplified": ["Key", "Hanzi"],
+      "pinyin": "Pinyin",
+      "english": "English"
+    }
+  },
+
+  "data/chin_example_sen.db": {
+    "name": "examples",
+    "lang": "zh",
+	"condition": "simplified LIKE '%{{seed}}%' ORDER BY CASE WHEN length(simplified) BETWEEN 10 AND 15 THEN 0 WHEN length(simplified) < 10 THEN 1 ELSE 2 END, CASE WHEN length(simplified) < 10 THEN -length(simplified) ELSE length(simplified) END",
+    "fields": {
+      "simplified": "Usage",
+      "pinyin": "SentencePinyin.1",
+      "english": "SentenceMeaning"
+      }
+  }
+}

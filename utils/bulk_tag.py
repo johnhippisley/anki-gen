@@ -1,9 +1,6 @@
 import csv
 import anki
 
-def anki_bulk_tag(tag: str, collection: list):
-	# ...
-
 # Expects format KEY_NAME, VALUE, TAG
 def anki_bulk_tag_csv(deck_name: str, path: str, delim = ","):
 	try:

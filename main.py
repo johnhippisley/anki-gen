@@ -2,23 +2,24 @@ from pathlib import Path
 import argparse
 import json
 import csv
+
 from utils import db
 from utils import anki
+from utils.display import CC as CC
+
+CONFIG_DEFAULT = "config.jsonc"
 
 comma_split = lambda s: [] if s is None else [item.strip() for item in s.split(",")]
-
-BOLD = "\033[1m"
-RESET = "\033[0m"
 
 def parse_args():
 	source_file = Path(__file__).name
 	parser = argparse.ArgumentParser(prog=source_file, description ="Automated generation for Anki vocabularly cards.")
-	parser.add_argument("-p", "--path", required=True, help="Text file of seeds (or .csv) to import")
-	parser.add_argument("-m", "--card-type", required=True, help="Name of the Anki card type")
-	parser.add_argument("-r", "--preview", action="store_true", help="Preview mode.")
-	parser.add_argument("-d", "--deck-name", help="Name of the Anki deck")
-	parser.add_argument("-t", "--tag", default=None, help="Tag name to apply to imported cards")
-	parser.add_argument("-c", "--config", default="config_chinese.json", help='Database configuration JSON. Default: "config_chinese.json"')
+	parser.add_argument("-c", "--config", default=CONFIG_DEFAULT, help=f"Database configuration JSON. Default: {CONFIG_DEFAULT}")
+	parser.add_argument("-p", "--path", required=True, help=".txt/.csv containing seeds for card generation")
+	parser.add_argument("-r", "--preview", action="store_true", help="Preview mode. Cards are not added to Anki")
+	parser.add_argument("-m", "--card-type", help="Name of the Anki card type for card creation")
+	parser.add_argument("-d", "--deck-name", help="Name of the Anki deck cards should be added to")
+	parser.add_argument("-t", "--tag", default=None, help="Tag(s) to apply to the generated cards")
 	parser.add_argument(
 		"-v", "--verbose", nargs="?", const=1, default=0, type=int, choices=[0, 1, 2],
 		help="Verbosity level: 0 by default, 1 with --verbose, 2 with --verbose=2"
@@ -55,17 +56,19 @@ def txt_mode(args, config):
 		n_created = 0
 		omitted = []
 		for i, line in enumerate(f):
-			print(f"{BOLD}[{i + 1}]{RESET}", end = " ")
+			index_pr = f"\n{CC.BOLD}[{i + 1}]{CC.RESET}"
 			seed = line.rstrip("\n")
 			if args.preview:
 				card = db.gen_anki_card(config, seed, args.card_type, comma_split(args.tag), args.verbose)
 				if card is not None:
-					print()
+					print(index_pr)
 					print(card)
 				else:
-					print(f"No data for card '{seed}'.")
+					print(index_pr)
+					print(f"{CC.RED}No data for card '{seed}'.{CC.RESET}")
 					omitted = omitted + [seed]
 			else:
+				print(index_pr, end=" ")
 				ret = make_card(args.deck_name, args.card_type, seed, comma_split(args.tag), args.verbose)
 				if ret == 0:
 					n_created = n_created + 1
@@ -74,8 +77,9 @@ def txt_mode(args, config):
 		
 		if not args.preview:
 			print(f"Unsuspended {n_unsuspended} card(s), created {n_created} card(s) in deck '{args.deck_name}'")
-		print("No data for: ", end = "")
-		print(", ".join(omitted) if omitted else "None")
+		
+		print(f"\n{CC.RED}No data for:{CC.RESET} ", end = "")
+		print(", ".join(omitted) if omitted else f"{CC.ITALIC}(None){CC.RESET}")
 
 def csv_mode(args, config):
 	with open(args.path, "r", encoding="utf-8", newline="") as f:
@@ -85,17 +89,19 @@ def csv_mode(args, config):
 		reader = csv.reader(f)
 		next(reader, None)  # skip header row
 		for i, row in enumerate(reader):
-			print(f"{BOLD}[{i + 1}]{RESET}", end=" ")
+			index_pr = f"\n{CC.BOLD}[{i + 1}]{CC.RESET}"
 			tag, seed = row[0], row[1]
 			if args.preview:
 				card = db.gen_anki_card(config, seed, args.card_type, comma_split(args.tag) + [tag], args.verbose)
 				if card is not None:
-					print()
+					print(index_pr)
 					print(card)
 				else:
-					print(f"No data for card '{seed}'.")
+					print(index_pr)
+					print(f"{CC.RED}No data for card '{seed}'.{CC.RESET}")
 					omitted = omitted + [seed]
 			else:
+				print(index_pr, end=" ")
 				ret = make_card(args.deck_name, args.card_type, seed, comma_split(args.tag) + [tag], args.verbose)
 				if ret == 0:
 					n_created = n_created + 1
@@ -104,23 +110,29 @@ def csv_mode(args, config):
 		
 		if not args.preview:
 			print(f"Unsuspended {n_unsuspended} card(s), created {n_created} card(s) in deck '{args.deck_name}'")
-		print("No data for: ", end = "")
-		print(", ".join(omitted) if omitted else "None")
+		
+		print(f"\n{CC.RED}No data for:{CC.RESET} ", end = "")
+		print(", ".join(omitted) if omitted else f"{CC.ITALIC}(None){CC.RESET}")
 
 
 if __name__ == "__main__":
 	args = parse_args()
+	
+	if args.preview:
+		print(f"{CC.BOLD}{CC.BG_GRAY}Preview mode. Cards will not be added.{CC.RESET}")
+	elif args.deck_name is None:
+		print("Deck name not provided.")
+		exit(1)
+	elif args.card_type is None:
+		print("Card type not provided.")
+		exit(1)
+
 	config = db.get_configuration(args.config)
 
 	if isinstance(config, db.Configuration):
 		print(f"Successfully loaded configuration {args.config}")
 	else:
 		print(f"Error loading configuration {args.config}")
-		exit(1)
-	if args.preview:
-		print("[Previewing cards]", end=" ")
-	elif args.deck_name is None:
-		print("Deck name not provided.")
 		exit(1)
 
 	ext = Path(args.path).suffix
